@@ -1,0 +1,5 @@
+A set of tools to manipulate SEGA games file formats.
+
+Supports: nbl (low endian only).
+
+* http://forum.psupedia.info/viewtopic.php?t=855
