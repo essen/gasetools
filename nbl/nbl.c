@@ -27,7 +27,7 @@
  * Return whether the identifier is valid for a .nbl file.
  */
 
-int nbl_is_nmll(unsigned char* pstrBuffer)
+int nbl_is_nmll(char* pstrBuffer)
 {
 	return NBL_READ_UINT(pstrBuffer, NBL_HEADER_IDENTIFIER) == NBL_ID_NMLL;
 }
@@ -36,7 +36,7 @@ int nbl_is_nmll(unsigned char* pstrBuffer)
  * Return the position of the data.
  */
 
-int nbl_get_data_pos(unsigned char* pstrBuffer)
+int nbl_get_data_pos(char* pstrBuffer)
 {
 	int ret;
 
@@ -51,10 +51,10 @@ int nbl_get_data_pos(unsigned char* pstrBuffer)
  * Returns a new pointer with the file contents.
  */
 
-unsigned char* nbl_load(unsigned char* pstrFilename)
+char* nbl_load(char* pstrFilename)
 {
 	FILE* pFile = NULL;
-	unsigned char* pstrBuffer = NULL;
+	char* pstrBuffer = NULL;
 	int iSize;
 
 	if (pstrFilename == NULL)
@@ -75,7 +75,7 @@ unsigned char* nbl_load(unsigned char* pstrFilename)
 		goto nbl_load_ret;
 
 	fseek(pFile, 0, SEEK_SET);
-	fread(pstrBuffer, sizeof(unsigned char), 4, pFile);
+	fread(pstrBuffer, sizeof(char), 4, pFile);
 
 	if (!nbl_is_nmll(pstrBuffer)) {
 		free(pstrBuffer);
@@ -83,7 +83,7 @@ unsigned char* nbl_load(unsigned char* pstrFilename)
 		goto nbl_load_ret;
 	}
 
-	fread(pstrBuffer + 4, sizeof(unsigned char), iSize - 4, pFile);
+	fread(pstrBuffer + 4, sizeof(char), iSize - 4, pFile);
 
 nbl_load_ret:
 	fclose(pFile);
@@ -191,7 +191,7 @@ unsigned int* nbl_build_key(unsigned int uSeed)
  * Decrypt the given buffer.
  */
 
-void nbl_decrypt_buffer(unsigned char* pstrBuffer, unsigned int* puKey, int iSize)
+void nbl_decrypt_buffer(char* pstrBuffer, unsigned int* puKey, int iSize)
 {
 	int i;
 
@@ -206,7 +206,7 @@ void nbl_decrypt_buffer(unsigned char* pstrBuffer, unsigned int* puKey, int iSiz
  * Decrypt the headers.
  */
 
-void nbl_decrypt_headers(unsigned char* pstrBuffer, unsigned int* puKey)
+void nbl_decrypt_headers(char* pstrBuffer, unsigned int* puKey)
 {
 	int i, iNbChunks, iHeaderSize;
 
@@ -222,7 +222,7 @@ void nbl_decrypt_headers(unsigned char* pstrBuffer, unsigned int* puKey)
  * Return whether the file is using compression.
  */
 
-int nbl_is_compressed(unsigned char* pstrBuffer)
+int nbl_is_compressed(char* pstrBuffer)
 {
 	return NBL_READ_UINT(pstrBuffer, NBL_HEADER_COMPRESSED_DATA_SIZE) != 0;
 }
@@ -240,7 +240,7 @@ typedef struct {
 	unsigned int uControlByteCounter;
 	unsigned char ucControlByte;
 
-	unsigned char* pstrSrc;
+	char* pstrSrc;
 	int iSrcPos;
 } nbl_decompress_struct;
 
@@ -260,7 +260,7 @@ static unsigned char nbl_decompress_get_next_control_bit(nbl_decompress_struct* 
 	return ret;
 }
 
-int nbl_decompress(unsigned char* pstrSrc, int iSrcSize, unsigned char* pstrDest, int iDestSize)
+int nbl_decompress(char* pstrSrc, int iSrcSize, char* pstrDest, int iDestSize)
 {
 	nbl_decompress_struct p;
 	int iDestPos, iTmpCount, iTmpPos;
@@ -324,7 +324,7 @@ nbl_decompress_ret:
  * List the files from the decrypted headers.
  */
 
-void nbl_list_files(unsigned char* pstrBuffer)
+void nbl_list_files(char* pstrBuffer)
 {
 	int i, iNbChunks;
 
@@ -338,11 +338,11 @@ void nbl_list_files(unsigned char* pstrBuffer)
  * Extract all the files from the data.
  */
 
-void nbl_extract_all(unsigned char* pstrBuffer, unsigned char* pstrData, unsigned char* pstrDestPath)
+void nbl_extract_all(char* pstrBuffer, char* pstrData, char* pstrDestPath)
 {
 	int i, iNbChunks, iLen;
 	FILE* pFile;
-	unsigned char* pstrFilename;
+	char* pstrFilename;
 
 	if (pstrDestPath == NULL) {
 		iLen = 0;

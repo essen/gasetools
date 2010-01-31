@@ -84,9 +84,9 @@
 
 /* Identification and loading */
 
-int nbl_is_nmll(unsigned char* pstrBuffer);
-int nbl_get_data_pos(unsigned char* pstrBuffer);
-unsigned char* nbl_load(unsigned char* pstrFilename);
+int nbl_is_nmll(char* pstrBuffer);
+int nbl_get_data_pos(char* pstrBuffer);
+char* nbl_load(char* pstrFilename);
 
 #define NBL_READ_INT(buf, pos) (*((int*)(buf + pos)))
 #define NBL_READ_UINT(buf, pos) (*((unsigned int*)(buf + pos)))
@@ -94,17 +94,17 @@ unsigned char* nbl_load(unsigned char* pstrFilename);
 /* Decryption */
 
 unsigned int* nbl_build_key(unsigned int uSeed);
-void nbl_decrypt_buffer(unsigned char* pstrBuffer, unsigned int* puKey, int iSize);
-void nbl_decrypt_headers(unsigned char* pstrBuffer, unsigned int* puKey);
+void nbl_decrypt_buffer(char* pstrBuffer, unsigned int* puKey, int iSize);
+void nbl_decrypt_headers(char* pstrBuffer, unsigned int* puKey);
 
 /* Decompression */
 
-int nbl_is_compressed(unsigned char* pstrBuffer);
-int nbl_decompress(unsigned char* pstrSrc, int iSrcSize, unsigned char* pstrDest, int iDestSize);
+int nbl_is_compressed(char* pstrBuffer);
+int nbl_decompress(char* pstrSrc, int iSrcSize, char* pstrDest, int iDestSize);
 
 /* List and extract contents */
 
-void nbl_list_files(unsigned char* pstrBuffer);
-void nbl_extract_all(unsigned char* pstrBuffer, unsigned char* pstrData, unsigned char* pstrDestPath);
+void nbl_list_files(char* pstrBuffer);
+void nbl_extract_all(char* pstrBuffer, char* pstrData, char* pstrDestPath);
 
 #endif /* __GASETOOLS_NBL_H__ */
