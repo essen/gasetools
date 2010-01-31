@@ -17,7 +17,10 @@
 #	along with gasetools.  If not, see <http://www.gnu.org/licenses/>.
 
 all: clean
-	cc -o gase main.c nbl.c
+	cc -o nbl main.c nbl.c
+
+win: clean
+	i586-mingw32msvc-gcc -o nbl.exe main.c nbl.c
 
 clean:
-	-rm gase
+	-rm nbl nbl.exe
