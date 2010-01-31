@@ -60,7 +60,7 @@ char* nbl_load(char* pstrFilename)
 	if (pstrFilename == NULL)
 		return NULL;
 
-	pFile = fopen(pstrFilename, "r");
+	pFile = fopen(pstrFilename, "rb");
 	if (pFile == NULL)
 		return NULL;
 
@@ -152,7 +152,7 @@ unsigned int* nbl_build_key(unsigned int uSeed)
 	unsigned int a, b, i, j;
 	int iRead;
 
-	pFile = fopen(NBL_COMMON_BASE_FILENAME, "r");
+	pFile = fopen(NBL_COMMON_BASE_FILENAME, "rb");
 	if (pFile == NULL)
 		return NULL;
 
@@ -380,7 +380,7 @@ void nbl_extract_all(char* pstrBuffer, char* pstrData, char* pstrDestPath)
 	for (i = 0; i < iNbChunks; i++) {
 		strncpy(pstrFilename + iLen, pstrBuffer + 0x40 + i * 0x60, NBL_CHUNK_FILENAME_SIZE);
 
-		pFile = fopen(pstrFilename, "w");
+		pFile = fopen(pstrFilename, "wb");
 		if (pFile) {
 			fwrite(pstrData + NBL_READ_UINT(pstrBuffer, 0x60 + i * 0x60), 1, NBL_READ_UINT(pstrBuffer, 0x64 + i * 0x60), pFile);
 			fclose(pFile);
