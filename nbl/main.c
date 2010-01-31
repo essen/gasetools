@@ -25,7 +25,7 @@
 int main(int argc, char** argv)
 {
 	unsigned char* pstrBuffer;
-	unsigned char* pstrDest;
+	unsigned char* pstrData;
 	int iIsCompressed, iDataPos;
 	unsigned int* puKey;
 	unsigned int uSeed;
@@ -63,8 +63,8 @@ int main(int argc, char** argv)
 			nbl_decrypt_buffer(pstrBuffer + iDataPos, puKey, NBL_READ_UINT(pstrBuffer, NBL_HEADER_COMPRESSED_DATA_SIZE));
 		}
 
-		pstrDest = malloc(NBL_READ_UINT(pstrBuffer, NBL_HEADER_DATA_SIZE));
-		if (pstrDest == NULL) {
+		pstrData = malloc(NBL_READ_UINT(pstrBuffer, NBL_HEADER_DATA_SIZE));
+		if (pstrData == NULL) {
 			free(puKey);
 			free(pstrBuffer);
 			return -3;
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
 		nbl_decompress(
 			pstrBuffer + iDataPos,
 			NBL_READ_UINT(pstrBuffer, NBL_HEADER_COMPRESSED_DATA_SIZE),
-			pstrDest,
+			pstrData,
 			NBL_READ_UINT(pstrBuffer, NBL_HEADER_DATA_SIZE)
 		);
 		/* TODO: check the return value */
@@ -82,16 +82,13 @@ int main(int argc, char** argv)
 			nbl_decrypt_buffer(pstrBuffer + iDataPos, puKey, NBL_READ_UINT(pstrBuffer, NBL_HEADER_DATA_SIZE));
 		}
 
-		pstrDest = pstrBuffer + iDataPos;
+		pstrData = pstrBuffer + iDataPos;
 	}
 
-	FILE* pFile;
-	pFile = fopen("theother.bin", "w");
-	fwrite(pstrDest, 1, NBL_READ_UINT(pstrBuffer, NBL_HEADER_DATA_SIZE), pFile);
-	fclose(pFile);
+	nbl_extract_all(pstrBuffer, pstrData);
 
 	if (iIsCompressed)
-		free(pstrDest);
+		free(pstrData);
 	if (puKey)
 		free(puKey);
 	free(pstrBuffer);

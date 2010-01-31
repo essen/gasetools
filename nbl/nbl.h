@@ -102,8 +102,9 @@ void nbl_decrypt_headers(unsigned char* pstrBuffer, unsigned int* puKey);
 int nbl_is_compressed(unsigned char* pstrBuffer);
 int nbl_decompress(unsigned char* pstrSrc, int iSrcSize, unsigned char* pstrDest, int iDestSize);
 
-/* List contents */
+/* List and extract contents */
 
 void nbl_list_files(unsigned char* pstrBuffer);
+void nbl_extract_all(unsigned char* pstrBuffer, unsigned char* pstrData);
 
 #endif /* __GASETOOLS_NBL_H__ */

@@ -333,3 +333,23 @@ void nbl_list_files(unsigned char* pstrBuffer)
 	for (i = 0; i < iNbChunks; i++)
 		printf("%s\n", pstrBuffer + 0x40 + i * 0x60);
 }
+
+/**
+ * Extract all the files from the data.
+ */
+
+void nbl_extract_all(unsigned char* pstrBuffer, unsigned char* pstrData)
+{
+	int i, iNbChunks;
+	FILE* pFile;
+
+	iNbChunks = NBL_READ_INT(pstrBuffer, NBL_HEADER_NB_CHUNKS);
+
+	for (i = 0; i < iNbChunks; i++) {
+		pFile = fopen(pstrBuffer + 0x40 + i * 0x60, "w");
+		if (pFile) {
+			fwrite(pstrData + NBL_READ_UINT(pstrBuffer, 0x60 + i * 0x60), 1, NBL_READ_UINT(pstrBuffer, 0x64 + i * 0x60), pFile);
+			fclose(pFile);
+		}
+	}
+}
