@@ -386,4 +386,6 @@ void nbl_extract_all(char* pstrBuffer, char* pstrData, char* pstrDestPath)
 			fclose(pFile);
 		}
 	}
+
+	free(pstrFilename);
 }
