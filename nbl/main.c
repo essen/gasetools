@@ -29,9 +29,9 @@ int main(int argc, char** argv)
 	unsigned char* pstrBuffer;
 	unsigned char* pstrData;
 	unsigned char* pstrDestPath = NULL;
-	int iIsCompressed;
-	int iDataPos;
+	int iIsCompressed = 0;
 	int iListOnly = 0;
+	int iDataPos;
 	int i;
 	unsigned int* puKey;
 	unsigned int uSeed;
