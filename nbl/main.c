@@ -18,24 +18,49 @@
 	along with gasetools.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "nbl.h"
 
 int main(int argc, char** argv)
 {
 	unsigned char* pstrBuffer;
 	unsigned char* pstrData;
-	int iIsCompressed, iDataPos;
+	int iIsCompressed, iDataPos, i;
 	unsigned int* puKey;
 	unsigned int uSeed;
+	unsigned char* pstrDestPath = NULL;
 
-	if (argc != 2) {
-		printf("Usage: %s file.nbl\n", argv[0]);
+	opterr = 0;
+	while ((i = getopt(argc, argv, "o:")) != -1) {
+		switch (i) {
+			case 'o':
+				pstrDestPath = optarg;
+				break;
+
+			case '?':
+				if (optopt == 'o')
+					fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+				else if (isprint(optopt))
+					fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+				else
+					fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
+				return 1;
+
+			default:
+				abort();
+		}
+	}
+
+	i = optind;
+	if (i + 1 != argc) {
+		fprintf(stderr, "Usage: %s [-o destpath] file.nbl\n", argv[0]);
 		return 2;
 	}
 
-	pstrBuffer = nbl_load(argv[1]);
+	pstrBuffer = nbl_load(argv[i]);
 	if (pstrBuffer == NULL)
 		return -1;
 
@@ -85,7 +110,7 @@ int main(int argc, char** argv)
 		pstrData = pstrBuffer + iDataPos;
 	}
 
-	nbl_extract_all(pstrBuffer, pstrData, ".");
+	nbl_extract_all(pstrBuffer, pstrData, pstrDestPath);
 
 	if (iIsCompressed)
 		free(pstrData);

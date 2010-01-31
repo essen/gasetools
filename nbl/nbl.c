@@ -344,12 +344,17 @@ void nbl_extract_all(unsigned char* pstrBuffer, unsigned char* pstrData, unsigne
 	FILE* pFile;
 	unsigned char* pstrFilename;
 
-	iLen = strlen(pstrDestPath);
-	pstrFilename = malloc(iLen + NBL_CHUNK_FILENAME_SIZE + 1);
-	/* TODO: check return value */
-	strcpy(pstrFilename, pstrDestPath);
-	if (pstrDestPath[iLen - 1] != '/' && pstrDestPath[iLen - 1] != '\\')
-		pstrFilename[iLen++] = '/';
+	if (pstrDestPath == NULL) {
+		iLen = 0;
+		pstrFilename = malloc(iLen + NBL_CHUNK_FILENAME_SIZE + 1);
+	} else {
+		iLen = strlen(pstrDestPath);
+		pstrFilename = malloc(iLen + NBL_CHUNK_FILENAME_SIZE + 1);
+		/* TODO: check return value */
+		strcpy(pstrFilename, pstrDestPath);
+		if (pstrDestPath[iLen - 1] != '/' && pstrDestPath[iLen - 1] != '\\')
+			pstrFilename[iLen++] = '/';
+	}
 
 	iNbChunks = NBL_READ_INT(pstrBuffer, NBL_HEADER_NB_CHUNKS);
 
