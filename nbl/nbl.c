@@ -55,7 +55,7 @@ char* nbl_load(char* pstrFilename)
 {
 	FILE* pFile = NULL;
 	char* pstrBuffer = NULL;
-	int iSize;
+	int iRead, iSize;
 
 	if (pstrFilename == NULL)
 		return NULL;
@@ -75,7 +75,13 @@ char* nbl_load(char* pstrFilename)
 		goto nbl_load_ret;
 
 	fseek(pFile, 0, SEEK_SET);
-	fread(pstrBuffer, sizeof(char), 4, pFile);
+	iRead = fread(pstrBuffer, sizeof(char), 4, pFile);
+
+	if (iRead != 4) {
+		free(pstrBuffer);
+		pstrBuffer = NULL;
+		goto nbl_load_ret;
+	}
 
 	if (!nbl_is_nmll(pstrBuffer)) {
 		free(pstrBuffer);
@@ -83,7 +89,13 @@ char* nbl_load(char* pstrFilename)
 		goto nbl_load_ret;
 	}
 
-	fread(pstrBuffer + 4, sizeof(char), iSize - 4, pFile);
+	iRead = fread(pstrBuffer + 4, sizeof(char), iSize - 4, pFile);
+
+	if (iRead != iSize - 4) {
+		free(pstrBuffer);
+		pstrBuffer = NULL;
+		/* goto nbl_load_ret; */
+	}
 
 nbl_load_ret:
 	fclose(pFile);
@@ -138,6 +150,7 @@ unsigned int* nbl_build_key(unsigned int uSeed)
 	FILE* pFile = NULL;
 	unsigned int* puKey;
 	unsigned int a, b, i, j;
+	int iRead;
 
 	pFile = fopen(NBL_COMMON_BASE_FILENAME, "r");
 	if (pFile == NULL)
@@ -150,22 +163,27 @@ unsigned int* nbl_build_key(unsigned int uSeed)
 	}
 
 	puKey[0] = NBL_COMMON_BASE_HEADER;
-	fread(puKey + 1, sizeof(unsigned int), NBL_KEY_SIZE / 4 - 1, pFile); // 18 + 1024
+	iRead = fread(puKey + 1, sizeof(unsigned int), NBL_KEY_SIZE / 4 - 1, pFile); /* 18 + 1024 */
 	fclose(pFile);
 
+	if (iRead != NBL_KEY_SIZE / 4 - 1) {
+		free(puKey);
+		return NULL;
+	}
+
 	for (i = 0; i < 0x12; i++) {
-		// The following code has been commented out because so far it's useless.
-		// If it doesn't work anymore, it might be a good idea to see why there was
-		// a modulo in use with a parameter in the original code. Probably related
-		// to endianess handling.
+		/*	The following code has been commented out because so far it's useless.
+			If it doesn't work anymore, it might be a good idea to see why there was
+			a modulo in use with a parameter in the original code. Probably related
+			to endianess handling.
 
-		//~ a = 0;
-		//~ a = (a & 0xffffff00) | ((*(((unsigned char*)(&uSeed)    )) & 0xff)      );
-		//~ a = (a & 0xffff00ff) | ((*(((unsigned char*)(&uSeed) + 1)) & 0xff) <<  8);
-		//~ a = (a & 0xff00ffff) | ((*(((unsigned char*)(&uSeed) + 2)) & 0xff) << 16);
-		//~ a = (a & 0x00ffffff) | ((*(((unsigned char*)(&uSeed) + 3)) & 0xff) << 24);
+		a = 0;
+		a = (a & 0xffffff00) | ((*(((unsigned char*)(&uSeed)    )) & 0xff)      );
+		a = (a & 0xffff00ff) | ((*(((unsigned char*)(&uSeed) + 1)) & 0xff) <<  8);
+		a = (a & 0xff00ffff) | ((*(((unsigned char*)(&uSeed) + 2)) & 0xff) << 16);
+		a = (a & 0x00ffffff) | ((*(((unsigned char*)(&uSeed) + 3)) & 0xff) << 24); */
 
-		puKey[i + 1] ^= uSeed; // was ^= a
+		puKey[i + 1] ^= uSeed; /* was ^= a */
 	}
 
 	for (a = 0, b = 0, i = 0; i < 0x12; i += 2) {
@@ -273,6 +291,7 @@ int nbl_decompress(char* pstrSrc, int iSrcSize, char* pstrDest, int iDestSize)
 	iDestPos = 0;
 
 	p.uControlByteCounter = 1;
+	p.ucControlByte = 0;
 	p.pstrSrc = pstrSrc;
 	p.iSrcPos = 0;
 
