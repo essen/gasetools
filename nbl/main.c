@@ -28,16 +28,23 @@ int main(int argc, char** argv)
 {
 	unsigned char* pstrBuffer;
 	unsigned char* pstrData;
-	int iIsCompressed, iDataPos, i;
+	unsigned char* pstrDestPath = NULL;
+	int iIsCompressed;
+	int iDataPos;
+	int iListOnly = 0;
+	int i;
 	unsigned int* puKey;
 	unsigned int uSeed;
-	unsigned char* pstrDestPath = NULL;
 
 	opterr = 0;
-	while ((i = getopt(argc, argv, "o:")) != -1) {
+	while ((i = getopt(argc, argv, "o:t")) != -1) {
 		switch (i) {
 			case 'o':
 				pstrDestPath = optarg;
+				break;
+
+			case 't':
+				iListOnly = 1;
 				break;
 
 			case '?':
@@ -77,8 +84,10 @@ int main(int argc, char** argv)
 		nbl_decrypt_headers(pstrBuffer, puKey);
 	}
 
-	/* TODO: make a -t option */
-	nbl_list_files(pstrBuffer);
+	if (iListOnly == 1) {
+		nbl_list_files(pstrBuffer);
+		goto main_ret;
+	}
 
 	iDataPos = nbl_get_data_pos(pstrBuffer);
 	iIsCompressed = nbl_is_compressed(pstrBuffer);
@@ -112,6 +121,7 @@ int main(int argc, char** argv)
 
 	nbl_extract_all(pstrBuffer, pstrData, pstrDestPath);
 
+main_ret:
 	if (iIsCompressed)
 		free(pstrData);
 	if (puKey)
