@@ -85,7 +85,7 @@ int main(int argc, char** argv)
 		pstrData = pstrBuffer + iDataPos;
 	}
 
-	nbl_extract_all(pstrBuffer, pstrData);
+	nbl_extract_all(pstrBuffer, pstrData, ".");
 
 	if (iIsCompressed)
 		free(pstrData);

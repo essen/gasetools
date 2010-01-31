@@ -105,6 +105,6 @@ int nbl_decompress(unsigned char* pstrSrc, int iSrcSize, unsigned char* pstrDest
 /* List and extract contents */
 
 void nbl_list_files(unsigned char* pstrBuffer);
-void nbl_extract_all(unsigned char* pstrBuffer, unsigned char* pstrData);
+void nbl_extract_all(unsigned char* pstrBuffer, unsigned char* pstrData, unsigned char* pstrDestPath);
 
 #endif /* __GASETOOLS_NBL_H__ */
