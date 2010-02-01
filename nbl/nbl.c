@@ -284,7 +284,7 @@ int nbl_decompress(char* pstrSrc, int iSrcSize, char* pstrDest, int iDestSize)
 	int iDestPos, iTmpCount, iTmpPos;
 	char a, b;
 
-	if (pstrDest == NULL || pstrSrc == NULL || iSrcSize <= 0)
+	if (pstrSrc == NULL || iSrcSize <= 0 || pstrDest == NULL || iDestSize <= 0)
 		return -1;
 
 	pstrDest = memset(pstrDest, 0, iDestSize);
