@@ -258,7 +258,7 @@ typedef struct {
 	unsigned int uControlByteCounter;
 	unsigned char ucControlByte;
 
-	char* pstrSrc;
+	unsigned char* pstrSrc;
 	int iSrcPos;
 } nbl_decompress_struct;
 
@@ -292,7 +292,7 @@ int nbl_decompress(char* pstrSrc, int iSrcSize, char* pstrDest, int iDestSize)
 
 	p.uControlByteCounter = 1;
 	p.ucControlByte = 0;
-	p.pstrSrc = pstrSrc;
+	p.pstrSrc = (unsigned char*)pstrSrc;
 	p.iSrcPos = 0;
 
 	while (1) {
