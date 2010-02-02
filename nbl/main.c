@@ -68,8 +68,10 @@ int main(int argc, char** argv)
 	}
 
 	pstrBuffer = nbl_load(argv[i]);
-	if (pstrBuffer == NULL)
+	if (pstrBuffer == NULL) {
+		fprintf(stderr, "Error opening file %s\n", argv[i]);
 		return -1;
+	}
 
 	uSeed = NBL_READ_UINT(pstrBuffer, NBL_HEADER_KEY_SEED);
 	if (uSeed == 0)
