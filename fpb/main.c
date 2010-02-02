@@ -31,9 +31,10 @@ int main(int argc, char** argv)
 	FILE* pFile;
 	FILE* pOut;
 	char* pstrBuffer;
-	char pstrFilename[16];
+	char pstrFilename[32];
 	int iCurrentPos = 0;
 	int i, iRead, iTotal;
+	int iNMLL = 0, iTMLL = 0;
 	int aFiles[10000];
 	unsigned int iTmp;
 
@@ -70,7 +71,12 @@ int main(int argc, char** argv)
 		pstrBuffer = malloc(aFiles[i + 1] - aFiles[i]);
 		iRead = fread(pstrBuffer, 1, aFiles[i + 1] - aFiles[i], pFile);
 		if (iRead > 0) {
-			sprintf(pstrFilename, "%d.nbl", i);
+			if (NBL_READ_UINT(pstrBuffer, NBL_HEADER_IDENTIFIER) == NBL_ID_TMLL)
+				sprintf(pstrFilename, "tmll-%d-new-format.nbl", iTMLL++);
+			else if (pstrBuffer[5])
+				sprintf(pstrFilename, "nmll-%d-new-format.nbl", iNMLL++);
+			else
+				sprintf(pstrFilename, "nmll-%d.nbl", iNMLL++);
 			pOut = fopen(pstrFilename, "wb");
 			fwrite(pstrBuffer, 1, aFiles[i + 1] - aFiles[i], pOut);
 			fclose(pOut);
