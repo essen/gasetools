@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 	char pstrFilename[16];
 	int iCurrentPos = 0;
 	int i, iRead, iTotal;
-	int aFiles[5000];
+	int aFiles[10000];
 	unsigned int iTmp;
 
 	if (2 != argc) {
@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 		if (iRead <= 0)
 			break;
 
-		if (iTmp == NBL_ID_NMLL || iTmp == NBL_ID_NMLB) {
+		if (iTmp == NBL_ID_NMLL || iTmp == NBL_ID_NMLB || iTmp == NBL_ID_TMLL) {
 			aFiles[iTotal] = iCurrentPos;
 			iTotal++;
 		}

@@ -31,6 +31,7 @@
 
 #define NBL_ID_NMLL	0x4C4C4D4E /* Low endian. */
 #define NBL_ID_NMLB	0x424C4D4E /* Big endian. Currently unsupported. */
+#define NBL_ID_TMLL	0x4C4C4D54 /* Unknown. */
 
 /* Chunk identifiers - probably irrelevant */
 
@@ -81,6 +82,7 @@
 /* Padding */
 
 #define NBL_CHUNK_PADDING_SIZE 0x800
+#define NBL_CHUNK_SMALL_PADDING_SIZE 0x40
 
 /* Identification and loading */
 
