@@ -38,11 +38,10 @@ int nbl_is_nmll(char* pstrBuffer)
 
 int nbl_get_data_pos(char* pstrBuffer)
 {
-	int ret;
+	int ret, iSize;
 
-	ret = NBL_READ_INT(pstrBuffer, NBL_HEADER_SIZE);
-	ret = ret / NBL_CHUNK_PADDING_SIZE + 1;
-
+	iSize = NBL_READ_INT(pstrBuffer, NBL_HEADER_SIZE);
+	ret = iSize / NBL_CHUNK_PADDING_SIZE + 1;
 	return ret * NBL_CHUNK_PADDING_SIZE;
 }
 
