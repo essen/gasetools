@@ -33,6 +33,15 @@ int nbl_is_nmll(char* pstrBuffer)
 }
 
 /**
+ * Return whether the file includes a TMLL section.
+ */
+
+int nbl_has_tmll(char* pstrBuffer)
+{
+	return NBL_READ_UINT(pstrBuffer, NBL_HEADER_TMLL_HEADER_SIZE) != 0;
+}
+
+/**
  * Return the position of the data.
  */
 
@@ -43,6 +52,23 @@ int nbl_get_data_pos(char* pstrBuffer)
 	iSize = NBL_READ_INT(pstrBuffer, NBL_HEADER_SIZE);
 	ret = iSize / NBL_CHUNK_PADDING_SIZE + 1;
 	return ret * NBL_CHUNK_PADDING_SIZE;
+}
+
+/**
+ * Return the position of the TMLL chunk.
+ * Currently use brute-force to find it since the header values are still unknown.
+ * Do NOT use this function if you don't know whether there is a TMLL chunk,
+ * check first using the nbl_has_tmll function.
+ */
+
+int nbl_get_tmll_pos(char* pstrBuffer)
+{
+	int iPos = 0;
+
+	while (NBL_READ_INT(pstrBuffer, iPos) != NBL_ID_TMLL)
+		iPos += NBL_CHUNK_PADDING_SIZE;
+
+	return iPos;
 }
 
 /**
@@ -223,15 +249,15 @@ void nbl_decrypt_buffer(char* pstrBuffer, unsigned int* puKey, int iSize)
  * Decrypt the headers.
  */
 
-void nbl_decrypt_headers(char* pstrBuffer, unsigned int* puKey)
+void nbl_decrypt_headers(char* pstrBuffer, unsigned int* puKey, int iHeaderChunksPos)
 {
 	int i, iNbChunks, iHeaderSize;
 
 	iNbChunks = NBL_READ_INT(pstrBuffer, NBL_HEADER_NB_CHUNKS);
 
 	for (i = 0; i < iNbChunks; i++) {
-		iHeaderSize = NBL_READ_INT(pstrBuffer, NBL_HEADER_CHUNKS + NBL_CHUNK_HEADER_SIZE);
-		nbl_decrypt_buffer(pstrBuffer + NBL_HEADER_CHUNKS + NBL_CHUNK_CRYPTED_HEADER + i * iHeaderSize, puKey, NBL_CHUNK_CRYPTED_SIZE);
+		iHeaderSize = NBL_READ_INT(pstrBuffer, iHeaderChunksPos + NBL_CHUNK_HEADER_SIZE); /* TODO: this one only ever takes the first chunk header */
+		nbl_decrypt_buffer(pstrBuffer + iHeaderChunksPos + NBL_CHUNK_CRYPTED_HEADER + i * iHeaderSize, puKey, NBL_CHUNK_CRYPTED_SIZE);
 	}
 }
 
@@ -342,14 +368,14 @@ nbl_decompress_ret:
  * List the files from the decrypted headers.
  */
 
-void nbl_list_files(char* pstrBuffer)
+void nbl_list_files(char* pstrBuffer, int iHeaderChunksPos)
 {
 	int i, iNbChunks;
 
 	iNbChunks = NBL_READ_INT(pstrBuffer, NBL_HEADER_NB_CHUNKS);
 
 	for (i = 0; i < iNbChunks; i++)
-		printf("%s\n", pstrBuffer + 0x40 + i * 0x60);
+		printf("%s\n", pstrBuffer + iHeaderChunksPos + NBL_CHUNK_FILENAME + i * 0x60);
 }
 
 /**

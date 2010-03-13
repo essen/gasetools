@@ -46,6 +46,7 @@ int main(int argc, char** argv)
 	int iPackOnly = 0;
 	int iVerbose = 0;
 	int iDataPos;
+	int iTMLLPos;
 	int i;
 	unsigned int* puKey = NULL;
 	unsigned int uSeed;
@@ -116,12 +117,12 @@ int main(int argc, char** argv)
 			return -2;
 		}
 
-		nbl_decrypt_headers(pstrBuffer, puKey);
+		nbl_decrypt_headers(pstrBuffer, puKey, NBL_HEADER_CHUNKS);
 	}
 
 	if (iListOnly == 1) {
-		nbl_list_files(pstrBuffer);
-		goto main_ret;
+		nbl_list_files(pstrBuffer, NBL_HEADER_CHUNKS);
+		goto read_tmll;
 	}
 
 	iDataPos = nbl_get_data_pos(pstrBuffer);
@@ -164,6 +165,22 @@ int main(int argc, char** argv)
 		debug_save_buffer("decomp-decrypt.dbg", pstrData, NBL_READ_UINT(pstrBuffer, NBL_HEADER_DATA_SIZE));
 
 	nbl_extract_all(pstrBuffer, pstrData, pstrDestPath);
+
+read_tmll:
+	if (!nbl_has_tmll(pstrBuffer))
+		goto main_ret;
+
+	iTMLLPos = nbl_get_tmll_pos(pstrBuffer);
+	if (iVerbose)
+		printf("TMLL section found at position 0x%x!\n", iTMLLPos);
+
+	if (puKey)
+		nbl_decrypt_headers(pstrBuffer + iTMLLPos, puKey, NBL_TMLL_HEADER_CHUNKS);
+
+	if (iListOnly == 1) {
+		nbl_list_files(pstrBuffer + iTMLLPos, NBL_TMLL_HEADER_CHUNKS);
+		goto main_ret;
+	}
 
 main_ret:
 	if (iIsCompressed)

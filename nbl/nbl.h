@@ -54,7 +54,13 @@
 #define NBL_HEADER_COMPRESSED_DATA_SIZE	0x14 /* Compressed; if 0 then the file isn't compressed. */
 /* Unknown 0x18. */
 #define NBL_HEADER_KEY_SEED		0x1C
+#define NBL_HEADER_TMLL_HEADER_SIZE				0x20
+#define NBL_HEADER_TMLL_DATA_SIZE				0x24
+#define NBL_HEADER_TMLL_COMPRESSED_DATA_SIZE	0x28
+#define NBL_HEADER_TMLL_NB_CHUNKS				0x2C
+
 #define NBL_HEADER_CHUNKS		0x30
+#define NBL_TMLL_HEADER_CHUNKS	0x20
 
 /* Positions from NBL_HEADER_CHUNKS */
 
@@ -88,7 +94,9 @@
 /* Identification and loading */
 
 int nbl_is_nmll(char* pstrBuffer);
+int nbl_has_tmll(char* pstrBuffer);
 int nbl_get_data_pos(char* pstrBuffer);
+int nbl_get_tmll_pos(char* pstrBuffer);
 char* nbl_load(char* pstrFilename);
 
 #define NBL_READ_INT(buf, pos) (*((int*)(buf + pos)))
@@ -98,7 +106,7 @@ char* nbl_load(char* pstrFilename);
 
 unsigned int* nbl_build_key(unsigned int uSeed);
 void nbl_decrypt_buffer(char* pstrBuffer, unsigned int* puKey, int iSize);
-void nbl_decrypt_headers(char* pstrBuffer, unsigned int* puKey);
+void nbl_decrypt_headers(char* pstrBuffer, unsigned int* puKey, int iHeaderChunksPos);
 
 /* Decompression */
 
@@ -107,7 +115,7 @@ int nbl_decompress(char* pstrSrc, int iSrcSize, char* pstrDest, int iDestSize);
 
 /* List and extract contents */
 
-void nbl_list_files(char* pstrBuffer);
+void nbl_list_files(char* pstrBuffer, int iHeaderChunksPos);
 void nbl_extract_all(char* pstrBuffer, char* pstrData, char* pstrDestPath);
 
 /* Create an archive */
