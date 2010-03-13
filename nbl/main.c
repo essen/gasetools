@@ -37,21 +37,27 @@ void debug_save_buffer(char* pstrFilename, char* pstrBuffer, int iSize)
 
 int main(int argc, char** argv)
 {
-	char* pstrBuffer;
+	char* pstrBuffer = NULL;
 	char* pstrData;
 	char* pstrDestPath = NULL;
 	int iIsCompressed = 0;
 	int iDebug = 0;
 	int iListOnly = 0;
+	int iPackOnly = 0;
 	int iVerbose = 0;
 	int iDataPos;
 	int i;
-	unsigned int* puKey;
+	unsigned int* puKey = NULL;
 	unsigned int uSeed;
 
 	opterr = 0;
-	while ((i = getopt(argc, argv, "do:tv")) != -1) {
+	while ((i = getopt(argc, argv, "c:do:tv")) != -1) {
 		switch (i) {
+			case 'c':
+				iPackOnly = 1;
+				pstrDestPath = optarg;
+				break;
+
 			case 'd':
 				iDebug = 1;
 				break;
@@ -83,9 +89,17 @@ int main(int argc, char** argv)
 	}
 
 	i = optind;
-	if (i + 1 != argc) {
+	if (!iPackOnly && i + 1 != argc) {
 		fprintf(stderr, "Usage: %s [-o destpath] file.nbl\n", argv[0]);
 		return 2;
+	}
+
+	if (iPackOnly == 1) {
+		if (iVerbose)
+			printf("dest=%s, nbfiles=%d\n", pstrDestPath, argc - i);
+
+		nbl_pack(pstrDestPath, &argv[i], argc - i);
+		goto main_ret;
 	}
 
 	pstrBuffer = nbl_load(argv[i]);
@@ -95,9 +109,7 @@ int main(int argc, char** argv)
 	}
 
 	uSeed = NBL_READ_UINT(pstrBuffer, NBL_HEADER_KEY_SEED);
-	if (uSeed == 0)
-		puKey = NULL;
-	else {
+	if (uSeed != 0) {
 		puKey = nbl_build_key(uSeed);
 		if (puKey == NULL) {
 			free(pstrBuffer);
@@ -115,9 +127,8 @@ int main(int argc, char** argv)
 	iDataPos = nbl_get_data_pos(pstrBuffer);
 	iIsCompressed = nbl_is_compressed(pstrBuffer);
 
-	if (iVerbose) {
+	if (iVerbose)
 		printf("data=%x, compressed=%x, encrypted=%x\n", iDataPos, iIsCompressed, uSeed != 0);
-	}
 
 	if (iIsCompressed) {
 		if (puKey) {
@@ -159,7 +170,8 @@ main_ret:
 		free(pstrData);
 	if (puKey)
 		free(puKey);
-	free(pstrBuffer);
+	if (pstrBuffer)
+		free(pstrBuffer);
 
 	return 0;
 }

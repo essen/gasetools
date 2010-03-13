@@ -388,3 +388,74 @@ void nbl_extract_all(char* pstrBuffer, char* pstrData, char* pstrDestPath)
 
 	free(pstrFilename);
 }
+
+/**
+ * Pack all the given source files in a .nbl.
+ */
+
+void nbl_pack(char* pstrDestFilename, char** pstrSrcFilenames, int iNbFiles)
+{
+	int i, iHeaderSize, iSize, iCurrentPos, iCurrentDataSize;
+	char* pstrBuffer;
+	char* pstrTmp;
+	char c = 0;
+	FILE* pDestFile;
+	FILE* pSrcFile;
+
+	pDestFile = fopen(pstrDestFilename, "wb");
+	/* TODO return check */
+
+	iHeaderSize = (1 + (NBL_HEADER_CHUNKS + NBL_CHUNK_SIZE * iNbFiles) / NBL_CHUNK_PADDING_SIZE) * NBL_CHUNK_PADDING_SIZE;
+	pstrBuffer = malloc(iHeaderSize);
+	/* TODO return check */
+
+	*((unsigned int*)(pstrBuffer)) = NBL_ID_NMLL;
+	*((unsigned int*)(pstrBuffer + 4)) = 0x00080002;
+	*((unsigned int*)(pstrBuffer + NBL_HEADER_SIZE)) = NBL_HEADER_CHUNKS + NBL_CHUNK_SIZE * iNbFiles;
+	*((unsigned int*)(pstrBuffer + NBL_HEADER_NB_CHUNKS)) = iNbFiles;
+
+	fseek(pDestFile, iHeaderSize, SEEK_SET);
+	iCurrentPos = iHeaderSize;
+	iCurrentDataSize = 0;
+
+	for (i = 0; i < iNbFiles; i++) {
+		pSrcFile = fopen(pstrSrcFilenames[i], "rb");
+		/* TODO return check */
+
+		fseek(pSrcFile, 0, SEEK_END);
+		iSize = ftell(pSrcFile);
+		fseek(pSrcFile, 0, SEEK_SET);
+
+		pstrTmp = malloc(iSize);
+		/* TODO return check */
+
+		fread(pstrTmp, 1, iSize, pSrcFile);
+		fwrite(pstrTmp, 1, iSize, pDestFile);
+
+		free(pstrTmp);
+		fclose(pSrcFile);
+
+		/* Fill out header info. */
+
+		*((unsigned int*)(pstrBuffer + NBL_HEADER_CHUNKS + NBL_CHUNK_SIZE * i + NBL_CHUNK_IDENTIFIER)) = NBL_ID_STD;
+		strncpy(pstrBuffer + NBL_HEADER_CHUNKS + NBL_CHUNK_SIZE * i + NBL_CHUNK_FILENAME, pstrSrcFilenames[i], NBL_CHUNK_FILENAME_SIZE);
+		*((unsigned int*)(pstrBuffer + NBL_HEADER_CHUNKS + NBL_CHUNK_SIZE * i + NBL_CHUNK_FILENAME + NBL_CHUNK_FILENAME_SIZE)) = iCurrentPos;
+		*((unsigned int*)(pstrBuffer + NBL_HEADER_CHUNKS + NBL_CHUNK_SIZE * i + NBL_CHUNK_FILENAME + NBL_CHUNK_FILENAME_SIZE + 4)) = iSize;
+
+		/* Pad with 0s. */
+
+		iCurrentDataSize = iCurrentPos + iSize - iHeaderSize;
+		iSize = (1 + iSize / NBL_CHUNK_PADDING_SIZE) * NBL_CHUNK_PADDING_SIZE;
+		fseek(pDestFile, iCurrentPos + iSize - 1, SEEK_SET);
+		fwrite(&c, 1, 1, pDestFile);
+		iCurrentPos += iSize;
+	}
+
+	*((unsigned int*)(pstrBuffer + NBL_HEADER_DATA_SIZE)) = iCurrentDataSize;
+
+	fseek(pDestFile, 0, SEEK_SET);
+	fwrite(pstrBuffer, 1, iHeaderSize, pDestFile);
+
+	free(pstrBuffer);
+	fclose(pDestFile);
+}

@@ -58,6 +58,7 @@
 
 /* Positions from NBL_HEADER_CHUNKS */
 
+#define NBL_CHUNK_SIZE				0x60
 #define NBL_CHUNK_IDENTIFIER		0x00
 #define NBL_CHUNK_HEADER_SIZE		0x04 /* Always 0x60 so far. */
 #define NBL_CHUNK_CRYPTED_HEADER	0x10
@@ -108,5 +109,9 @@ int nbl_decompress(char* pstrSrc, int iSrcSize, char* pstrDest, int iDestSize);
 
 void nbl_list_files(char* pstrBuffer);
 void nbl_extract_all(char* pstrBuffer, char* pstrData, char* pstrDestPath);
+
+/* Create an archive */
+
+void nbl_pack(char* pstrDestFilename, char** pstrSrcFilenames, int iNbFiles);
 
 #endif /* __GASETOOLS_NBL_H__ */
