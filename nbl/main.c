@@ -120,6 +120,9 @@ int extract(unsigned int uOptions, char* pstrBuffer, unsigned int* puKey, char* 
 		printf("data=%x, compressed=%x, encrypted=%x\n", iDataPos, iIsCompressed, puKey != NULL);
 
 	if (iIsCompressed) {
+		if (uOptions & OPTION_DEBUG)
+			debug_save_buffer("tmll-comp-crypt.dbg", pstrBuffer + iTMLLPos, NBL_READ_UINT(pstrBuffer + iTMLLPos, NBL_HEADER_COMPRESSED_DATA_SIZE));
+
 		if (puKey)
 			nbl_decrypt_buffer(pstrBuffer + iTMLLPos + iDataPos, puKey, NBL_READ_UINT(pstrBuffer + iTMLLPos, NBL_HEADER_COMPRESSED_DATA_SIZE));
 
