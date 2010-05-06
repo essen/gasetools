@@ -1,5 +1,9 @@
 A set of tools to manipulate SEGA games file formats.
+http://psumods.co.uk
 
-Supports: nbl (low endian only).
+Tools:
 
-* http://forum.psupedia.info/viewtopic.php?t=855
+* afs (read-only)
+* exp (decompressor)
+* fpb (PSP2 files extractor)
+* nbl (read-only, low endian)
