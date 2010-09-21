@@ -71,9 +71,7 @@ int main(int argc, char** argv)
 		pstrBuffer = malloc(aFiles[i + 1] - aFiles[i]);
 		iRead = fread(pstrBuffer, 1, aFiles[i + 1] - aFiles[i], pFile);
 		if (iRead > 0) {
-			if (NBL_READ_UINT(pstrBuffer, NBL_HEADER_IDENTIFIER) == NBL_ID_TMLL)
-				sprintf(pstrFilename, "tmll-%d-new-format.nbl", iTMLL++);
-			else if (pstrBuffer[5])
+			if (pstrBuffer[5])
 				sprintf(pstrFilename, "nmll-%d-new-format.nbl", iNMLL++);
 			else
 				sprintf(pstrFilename, "nmll-%d.nbl", iNMLL++);
