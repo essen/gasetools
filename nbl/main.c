@@ -52,28 +52,32 @@ void debug_save_buffer(char* pstrFilename, char* pstrBuffer, int iSize)
  * Extract the files from the nbl archive.
  */
 
-int extract(unsigned int uOptions, char* pstrBuffer, unsigned int* puKey, char* pstrDestPath)
+int extract(unsigned int uOptions, char* pstrBuffer, struct bf_ctx* pCtx, char* pstrDestPath)
 {
 	char* pstrData;
 	int iIsCompressed = 0;
 	int iDataPos;
 	int iTMLLPos;
 
-	if (puKey)
-		nbl_decrypt_headers(pstrBuffer, puKey, NBL_HEADER_CHUNKS);
+	if (pCtx) {
+		nbl_decrypt_headers(pCtx, pstrBuffer, NBL_HEADER_CHUNKS);
+
+		if (uOptions & OPTION_DEBUG)
+			debug_save_buffer("decrypt-headers.dbg", pstrBuffer, NBL_READ_UINT(pstrBuffer, NBL_HEADER_SIZE));
+	}
 
 	iDataPos = nbl_get_data_pos(pstrBuffer);
 	iIsCompressed = nbl_is_compressed(pstrBuffer);
 
 	if (uOptions & OPTION_VERBOSE)
-		printf("data=%x, compressed=%x, encrypted=%x\n", iDataPos, iIsCompressed, puKey != NULL);
+		printf("data=%x, compressed=%x, encrypted=%x\n", iDataPos, iIsCompressed, pCtx != NULL);
 
 	if (iIsCompressed) {
-		if (puKey)
-			nbl_decrypt_buffer(pstrBuffer + iDataPos, puKey, NBL_READ_UINT(pstrBuffer, NBL_HEADER_COMPRESSED_DATA_SIZE));
+		if (pCtx)
+			nbl_decrypt_buffer(pCtx, pstrBuffer + iDataPos, NBL_READ_UINT(pstrBuffer, NBL_HEADER_COMPRESSED_DATA_SIZE));
 
 		if (uOptions & OPTION_DEBUG)
-			debug_save_buffer("comp-decrypt.dbg", pstrBuffer, NBL_READ_UINT(pstrBuffer, NBL_HEADER_COMPRESSED_DATA_SIZE));
+			debug_save_buffer("comp-decrypt.dbg", pstrBuffer + iDataPos, NBL_READ_UINT(pstrBuffer, NBL_HEADER_COMPRESSED_DATA_SIZE));
 
 		pstrData = malloc(NBL_READ_UINT(pstrBuffer, NBL_HEADER_DATA_SIZE));
 		if (pstrData == NULL)
@@ -87,8 +91,8 @@ int extract(unsigned int uOptions, char* pstrBuffer, unsigned int* puKey, char* 
 		);
 		/* TODO: check the return value */
 	} else {
-		if (puKey)
-			nbl_decrypt_buffer(pstrBuffer + iDataPos, puKey, NBL_READ_UINT(pstrBuffer, NBL_HEADER_DATA_SIZE));
+		if (pCtx)
+			nbl_decrypt_buffer(pCtx, pstrBuffer + iDataPos, NBL_READ_UINT(pstrBuffer, NBL_HEADER_DATA_SIZE));
 
 		pstrData = pstrBuffer + iDataPos;
 	}
@@ -110,21 +114,21 @@ int extract(unsigned int uOptions, char* pstrBuffer, unsigned int* puKey, char* 
 	if (uOptions & OPTION_VERBOSE)
 		printf("TMLL section found at position 0x%x!\n", iTMLLPos);
 
-	if (puKey)
-		nbl_decrypt_headers(pstrBuffer + iTMLLPos, puKey, NBL_TMLL_HEADER_CHUNKS);
+	if (pCtx)
+		nbl_decrypt_headers(pCtx, pstrBuffer + iTMLLPos, NBL_TMLL_HEADER_CHUNKS);
 
 	iDataPos = nbl_get_data_pos(pstrBuffer + iTMLLPos);
 	iIsCompressed = nbl_is_compressed(pstrBuffer + iTMLLPos);
 
 	if (uOptions & OPTION_VERBOSE)
-		printf("data=%x, compressed=%x, encrypted=%x\n", iDataPos, iIsCompressed, puKey != NULL);
+		printf("data=%x, compressed=%x, encrypted=%x\n", iDataPos, iIsCompressed, pCtx != NULL);
 
 	if (iIsCompressed) {
 		if (uOptions & OPTION_DEBUG)
 			debug_save_buffer("tmll-comp-crypt.dbg", pstrBuffer + iTMLLPos, NBL_READ_UINT(pstrBuffer + iTMLLPos, NBL_HEADER_COMPRESSED_DATA_SIZE));
 
-		if (puKey)
-			nbl_decrypt_buffer(pstrBuffer + iTMLLPos + iDataPos, puKey, NBL_READ_UINT(pstrBuffer + iTMLLPos, NBL_HEADER_COMPRESSED_DATA_SIZE));
+		if (pCtx)
+			nbl_decrypt_buffer(pCtx, pstrBuffer + iTMLLPos + iDataPos, NBL_READ_UINT(pstrBuffer + iTMLLPos, NBL_HEADER_COMPRESSED_DATA_SIZE));
 
 		if (uOptions & OPTION_DEBUG)
 			debug_save_buffer("tmll-comp-decrypt.dbg", pstrBuffer + iTMLLPos, NBL_READ_UINT(pstrBuffer + iTMLLPos, NBL_HEADER_COMPRESSED_DATA_SIZE));
@@ -134,7 +138,6 @@ int extract(unsigned int uOptions, char* pstrBuffer, unsigned int* puKey, char* 
 
 		pstrData = malloc(NBL_READ_UINT(pstrBuffer + iTMLLPos, NBL_HEADER_DATA_SIZE));
 		if (pstrData == NULL) {
-			free(puKey);
 			free(pstrBuffer);
 			return -3;
 		}
@@ -147,8 +150,8 @@ int extract(unsigned int uOptions, char* pstrBuffer, unsigned int* puKey, char* 
 		);
 		/* TODO: check the return value */
 	} else {
-		if (puKey)
-			nbl_decrypt_buffer(pstrBuffer + iTMLLPos + iDataPos, puKey, NBL_READ_UINT(pstrBuffer + iTMLLPos, NBL_HEADER_DATA_SIZE));
+		if (pCtx)
+			nbl_decrypt_buffer(pCtx, pstrBuffer + iTMLLPos + iDataPos, NBL_READ_UINT(pstrBuffer + iTMLLPos, NBL_HEADER_DATA_SIZE));
 
 		pstrData = pstrBuffer + iTMLLPos + iDataPos;
 	}
@@ -168,12 +171,12 @@ int extract(unsigned int uOptions, char* pstrBuffer, unsigned int* puKey, char* 
  * List the files inside the nbl archive.
  */
 
-void list(unsigned int uOptions, char* pstrBuffer, unsigned int* puKey)
+void list(unsigned int uOptions, char* pstrBuffer, struct bf_ctx* pCtx)
 {
 	int iTMLLPos;
 
-	if (puKey)
-		nbl_decrypt_headers(pstrBuffer, puKey, NBL_HEADER_CHUNKS);
+	if (pCtx)
+		nbl_decrypt_headers(pCtx, pstrBuffer, NBL_HEADER_CHUNKS);
 	nbl_list_files(pstrBuffer, NBL_HEADER_CHUNKS);
 
 	if (!nbl_has_tmll(pstrBuffer))
@@ -183,8 +186,8 @@ void list(unsigned int uOptions, char* pstrBuffer, unsigned int* puKey)
 	if (uOptions & OPTION_VERBOSE)
 		printf("TMLL section found at position 0x%x!\n", iTMLLPos);
 
-	if (puKey)
-		nbl_decrypt_headers(pstrBuffer + iTMLLPos, puKey, NBL_TMLL_HEADER_CHUNKS);
+	if (pCtx)
+		nbl_decrypt_headers(pCtx, pstrBuffer + iTMLLPos, NBL_TMLL_HEADER_CHUNKS);
 	nbl_list_files(pstrBuffer + iTMLLPos, NBL_TMLL_HEADER_CHUNKS);
 }
 
@@ -196,8 +199,9 @@ int main(int argc, char** argv)
 {
 	char* pstrBuffer = NULL;
 	char* pstrDestPath = NULL;
-	unsigned int* puKey = NULL;
-	unsigned int uSeed;
+	struct bf_ctx ctx;
+	struct bf_ctx* pCtx = NULL;
+	unsigned char key[4];
 	unsigned int uOptions = 0;
 	int i;
 	int ret = 0;
@@ -260,23 +264,23 @@ int main(int argc, char** argv)
 			return -1;
 		}
 
-		uSeed = NBL_READ_UINT(pstrBuffer, NBL_HEADER_KEY_SEED);
-		if (uSeed != 0) {
-			puKey = nbl_build_key(uSeed);
-			if (puKey == NULL) {
-				free(pstrBuffer);
-				return -2;
-			}
+		if (NBL_READ_UINT(pstrBuffer, NBL_HEADER_KEY_SEED) == 0)
+			pCtx = NULL;
+		else {
+			pCtx = &ctx;
+			key[0] = *(unsigned char*)(pstrBuffer + NBL_HEADER_KEY_SEED + 3);
+			key[1] = *(unsigned char*)(pstrBuffer + NBL_HEADER_KEY_SEED + 2);
+			key[2] = *(unsigned char*)(pstrBuffer + NBL_HEADER_KEY_SEED + 1);
+			key[3] = *(unsigned char*)(pstrBuffer + NBL_HEADER_KEY_SEED);
+			bf_setkey(pCtx, key, 4);
 		}
 
 		if (uOptions & OPTION_LIST)
-			list(uOptions, pstrBuffer, puKey);
+			list(uOptions, pstrBuffer, pCtx);
 		else
-			ret = extract(uOptions, pstrBuffer, puKey, pstrDestPath);
+			ret = extract(uOptions, pstrBuffer, pCtx, pstrDestPath);
 	}
 
-	if (puKey)
-		free(puKey);
 	if (pstrBuffer)
 		free(pstrBuffer);
 

@@ -21,12 +21,6 @@
 #ifndef __GASETOOLS_NBL_H__
 #define __GASETOOLS_NBL_H__
 
-/* Key information */
-
-#define NBL_COMMON_BASE_HEADER 0x0085A080
-#define NBL_COMMON_BASE_FILENAME "cbkey.dat"
-#define NBL_KEY_SIZE 4172 /* (1 + 18 + 1024) * 4 */
-
 /* Filetype identifiers */
 
 #define NBL_ID_NMLL	0x4C4C4D4E /* Low endian. */
@@ -104,9 +98,9 @@ char* nbl_load(char* pstrFilename);
 
 /* Decryption */
 
-unsigned int* nbl_build_key(unsigned int uSeed);
-void nbl_decrypt_buffer(char* pstrBuffer, unsigned int* puKey, int iSize);
-void nbl_decrypt_headers(char* pstrBuffer, unsigned int* puKey, int iHeaderChunksPos);
+#include "fakefish.h"
+void nbl_decrypt_buffer(struct bf_ctx *pCtx, char* pstrBuffer, int iSize);
+void nbl_decrypt_headers(struct bf_ctx *pCtx, char* pstrBuffer, int iHeaderChunksPos);
 
 /* Decompression */
 

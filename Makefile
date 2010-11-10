@@ -25,7 +25,6 @@ all: clean
 	cp afs/afs build
 	cp exp/exp build
 	cp fpb/fpb build
-	cp nbl/cbkey.dat build
 	cp nbl/nbl build
 	cp docs/* build
 	cp scripts/* build
@@ -39,7 +38,6 @@ win: clean
 	cp afs/afs.exe build
 	cp exp/exp.exe build
 	cp fpb/fpb.exe build
-	cp nbl/cbkey.dat build
 	cp nbl/nbl.exe build
 	cp docs/* build
 	cp scripts/* build

@@ -47,11 +47,12 @@ int nbl_has_tmll(char* pstrBuffer)
 
 int nbl_get_data_pos(char* pstrBuffer)
 {
-	int ret, iSize;
+	int ret;
 
-	iSize = NBL_READ_INT(pstrBuffer, NBL_HEADER_SIZE);
-	ret = iSize / NBL_CHUNK_PADDING_SIZE + 1;
-	return ret * NBL_CHUNK_PADDING_SIZE;
+	ret = NBL_READ_INT(pstrBuffer, NBL_HEADER_SIZE);
+	while (NBL_READ_INT(pstrBuffer, ret) == 0)
+		ret += 16;
+	return ret;
 }
 
 /**
@@ -128,137 +129,30 @@ nbl_load_ret:
 }
 
 /**
- * Shuffle the bits to decrypt the data.
- * When building the key the last two parameters should be (1,1).
- * Otherwise they should be (18,-1). Added those parameters compared
- * to the original algorithm to simplify greatly the code.
- * Either way I'm not sure what encryption algorithm it is exactly.
- * It's mostly xor-based though, so it should be possible to encrypt ourselves too.
- */
-
-#define BIG_BERTHA(x, y, z, pos) \
-	tmp  = x[( y        & 0xff)+0x013]; \
-	tmp += x[((y >>  8) & 0xff)+0x113]; \
-	tmp ^= x[((y >> 16) & 0xff)+0x213]; \
-	tmp += x[((y >> 24) & 0xff)+0x313]; \
-	tmp ^= x[pos]; \
-	tmp ^= z; \
-	z = tmp;
-
-static void nbl_crypt_shuffle(unsigned int* puKey, unsigned int* puHigh, unsigned int* puLow, int iFrom, int iInc)
-{
-	unsigned int a, b, tmp;
-
-	a = *puHigh;
-	b = *puLow;
-
-	b ^= puKey[iFrom];
-	for (iFrom += iInc; iFrom > 1 && iFrom < 18; iFrom += 2 * iInc) {
-		BIG_BERTHA(puKey, b, a, iFrom       );
-		BIG_BERTHA(puKey, a, b, iFrom + iInc);
-	}
-	a ^= puKey[iFrom];
-
-	*puHigh = b;
-	*puLow  = a;
-}
-
-#undef BIG_BERTHA
-
-/**
- * Generate the decryption key based on the common base and the seed.
- * Returns a new pointer with the decryption key.
- */
-
-unsigned int* nbl_build_key(unsigned int uSeed)
-{
-	FILE* pFile = NULL;
-	unsigned int* puKey;
-	unsigned int a, b, i, j;
-	int iRead;
-
-	pFile = fopen(NBL_COMMON_BASE_FILENAME, "rb");
-	if (pFile == NULL)
-		return NULL;
-
-	puKey = malloc(NBL_KEY_SIZE);
-	if (puKey == NULL) {
-		fclose(pFile);
-		return NULL;
-	}
-
-	puKey[0] = NBL_COMMON_BASE_HEADER;
-	iRead = fread(puKey + 1, sizeof(unsigned int), NBL_KEY_SIZE / 4 - 1, pFile); /* 18 + 1024 */
-	fclose(pFile);
-
-	if (iRead != NBL_KEY_SIZE / 4 - 1) {
-		free(puKey);
-		return NULL;
-	}
-
-	for (i = 0; i < 0x12; i++) {
-		/*	The following code has been commented out because so far it's useless.
-			If it doesn't work anymore, it might be a good idea to see why there was
-			a modulo in use with a parameter in the original code. Probably related
-			to endianess handling.
-
-		a = 0;
-		a = (a & 0xffffff00) | ((*(((unsigned char*)(&uSeed)    )) & 0xff)      );
-		a = (a & 0xffff00ff) | ((*(((unsigned char*)(&uSeed) + 1)) & 0xff) <<  8);
-		a = (a & 0xff00ffff) | ((*(((unsigned char*)(&uSeed) + 2)) & 0xff) << 16);
-		a = (a & 0x00ffffff) | ((*(((unsigned char*)(&uSeed) + 3)) & 0xff) << 24); */
-
-		puKey[i + 1] ^= uSeed; /* was ^= a */
-	}
-
-	for (a = 0, b = 0, i = 0; i < 0x12; i += 2) {
-		nbl_crypt_shuffle(puKey, &a, &b, 1, 1);
-
-		puKey[i + 1] = b;
-		puKey[i + 2] = a;
-	}
-
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < 0x100; j += 2) {
-			nbl_crypt_shuffle(puKey, &a, &b, 1, 1);
-
-			puKey[(i << 8) + 0x13 + j    ] = b;
-			puKey[(i << 8) + 0x13 + j + 1] = a;
-		}
-	}
-
-	return puKey;
-}
-
-/**
  * Decrypt the given buffer.
+ * @todo Guess the buffer should be unsigned char* after all.
  */
 
-void nbl_decrypt_buffer(char* pstrBuffer, unsigned int* puKey, int iSize)
+void nbl_decrypt_buffer(struct bf_ctx *pCtx, char* pstrBuffer, int iSize)
 {
 	int i;
 
-	iSize /= 8;
-	for (i = 0; i < iSize; i++) {
-		nbl_crypt_shuffle(puKey, (unsigned int*)(pstrBuffer + 4), (unsigned int*)pstrBuffer, 18, -1);
-		pstrBuffer += 8;
-	}
+	for (i = 0; i < iSize; i += 8)
+		bf_decrypt(pCtx, (unsigned char*)(pstrBuffer + i), (unsigned char*)(pstrBuffer + i));
 }
 
 /**
  * Decrypt the headers.
  */
 
-void nbl_decrypt_headers(char* pstrBuffer, unsigned int* puKey, int iHeaderChunksPos)
+void nbl_decrypt_headers(struct bf_ctx *pCtx, char* pstrBuffer, int iHeaderChunksPos)
 {
-	int i, iNbChunks, iHeaderSize;
+	int i, iNbChunks;
 
 	iNbChunks = NBL_READ_INT(pstrBuffer, NBL_HEADER_NB_CHUNKS);
 
-	for (i = 0; i < iNbChunks; i++) {
-		iHeaderSize = NBL_READ_INT(pstrBuffer, iHeaderChunksPos + NBL_CHUNK_HEADER_SIZE); /* TODO: this one only ever takes the first chunk header */
-		nbl_decrypt_buffer(pstrBuffer + iHeaderChunksPos + NBL_CHUNK_CRYPTED_HEADER + i * iHeaderSize, puKey, NBL_CHUNK_CRYPTED_SIZE);
-	}
+	for (i = 0; i < iNbChunks; i++)
+		nbl_decrypt_buffer(pCtx, pstrBuffer + iHeaderChunksPos + NBL_CHUNK_CRYPTED_HEADER + i * 96, NBL_CHUNK_CRYPTED_SIZE);
 }
 
 /**
