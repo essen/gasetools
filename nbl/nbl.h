@@ -27,27 +27,16 @@
 #define NBL_ID_NMLB	0x424C4D4E /* Big endian. Currently unsupported. */
 #define NBL_ID_TMLL	0x4C4C4D54 /* Unknown. */
 
-/* Chunk identifiers - probably irrelevant */
-
-#define NBL_ID_STD	0x00445453
-#define NBL_ID_REL	0x004C4552
-#define NBL_ID_XNCP	0x50434E58
-#define NBL_ID_XNT	0x00544E58
-
-/* To be confirmed. Probably whether it's compressed. */
-
-#define NBL_ID_NXIF	0x4649584E
-
 /* Positions */
 
-#define NBL_HEADER_IDENTIFIER	0x00
+#define NBL_HEADER_IDENTIFIER					0x00
 /* Unknown 0x04. */
-#define NBL_HEADER_SIZE			0x08
-#define NBL_HEADER_NB_CHUNKS	0x0C
-#define NBL_HEADER_DATA_SIZE			0x10 /* Uncompressed. */
-#define NBL_HEADER_COMPRESSED_DATA_SIZE	0x14 /* Compressed; if 0 then the file isn't compressed. */
-/* Unknown 0x18. */
-#define NBL_HEADER_KEY_SEED		0x1C
+#define NBL_HEADER_SIZE							0x08
+#define NBL_HEADER_NB_CHUNKS					0x0C
+#define NBL_HEADER_DATA_SIZE					0x10 /* Uncompressed. */
+#define NBL_HEADER_COMPRESSED_DATA_SIZE			0x14 /* Compressed; if 0 then the file isn't compressed. */
+#define NBL_HEADER_PTRS_POS						0x18
+#define NBL_HEADER_KEY_SEED						0x1C
 #define NBL_HEADER_TMLL_HEADER_SIZE				0x20
 #define NBL_HEADER_TMLL_DATA_SIZE				0x24
 #define NBL_HEADER_TMLL_COMPRESSED_DATA_SIZE	0x28
@@ -60,25 +49,25 @@
 
 #define NBL_CHUNK_SIZE				0x60
 #define NBL_CHUNK_IDENTIFIER		0x00
-#define NBL_CHUNK_HEADER_SIZE		0x04 /* Always 0x60 so far. */
+#define NBL_CHUNK_HEADER_SIZE		0x04 /* Apparently isn't 0x60 all the time. Unsafe to use. */
 #define NBL_CHUNK_CRYPTED_HEADER	0x10
 #define NBL_CHUNK_CRYPTED_SIZE		0x30
 /* Encrypted part */
 #define NBL_CHUNK_FILENAME			0x10
 #define NBL_CHUNK_FILENAME_SIZE		0x20
-#define NBL_CHUNK_W 0x30
-#define NBL_CHUNK_X 0x34
-#define NBL_CHUNK_Y 0x38
-#define NBL_CHUNK_Z 0x3C
+#define NBL_CHUNK_FILE_POS			0x30
+#define NBL_CHUNK_FILE_SIZE			0x34
+#define NBL_CHUNK_PTRS_INDEX		0x38
+#define NBL_CHUNK_PTRS_SIZE			0x3C
 /* After the encrypted part. */
-#define NBL_CHUNK_A 0x40 /* NBL_ID_NXIF or empty. */
-#define NBL_CHUNK_B 0x44 /* Probably safely ignored. */
-#define NBL_CHUNK_C 0x48 /* Probably safely ignored. */
-#define NBL_CHUNK_D 0x4C /* Probably safely ignored. */
+#define NBL_CHUNK_A 0x40 /* NBL_ID_NXIF or empty if the chunk id is STD. If empty then all the following is empty. */
+#define NBL_CHUNK_B 0x44
+#define NBL_CHUNK_C 0x48
+#define NBL_CHUNK_D 0x4C
 #define NBL_CHUNK_E 0x50
 #define NBL_CHUNK_F 0x54
 #define NBL_CHUNK_G 0x58
-#define NBL_CHUNK_H 0x5C /* Probably safely ignored. */
+#define NBL_CHUNK_H 0x5C
 
 /* Padding */
 
@@ -111,9 +100,5 @@ int nbl_decompress(char* pstrSrc, int iSrcSize, char* pstrDest, int iDestSize);
 
 void nbl_list_files(char* pstrBuffer, int iHeaderChunksPos);
 void nbl_extract_all(char* pstrBuffer, char* pstrData, char* pstrDestPath);
-
-/* Create an archive */
-
-void nbl_pack(char* pstrDestFilename, char** pstrSrcFilenames, int iNbFiles);
 
 #endif /* __GASETOOLS_NBL_H__ */

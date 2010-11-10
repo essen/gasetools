@@ -28,10 +28,9 @@
  * Options masks.
  */
 
-#define OPTION_PACK		0x1
-#define OPTION_LIST		0x2
-#define OPTION_DEBUG	0x4
-#define OPTION_VERBOSE	0x8
+#define OPTION_LIST		0x1
+#define OPTION_DEBUG	0x2
+#define OPTION_VERBOSE	0x4
 
 /**
  * Save the given buffer in a file. Used for debugging purpose only.
@@ -207,13 +206,8 @@ int main(int argc, char** argv)
 	int ret = 0;
 
 	opterr = 0;
-	while ((i = getopt(argc, argv, "c:do:tv")) != -1) {
+	while ((i = getopt(argc, argv, "do:tv")) != -1) {
 		switch (i) {
-			case 'c':
-				uOptions |= OPTION_PACK;
-				pstrDestPath = optarg;
-				break;
-
 			case 'd':
 				uOptions |= OPTION_DEBUG;
 				break;
@@ -246,40 +240,32 @@ int main(int argc, char** argv)
 
 	i = optind;
 
-	if (uOptions & OPTION_PACK) {
-		if (uOptions & OPTION_VERBOSE)
-			printf("dest=%s, nbfiles=%d\n", pstrDestPath, argc - i);
-
-		/* TODO: the packer is broken, continue work on this after figuring out TMLL files */
-		nbl_pack(pstrDestPath, &argv[i], argc - i);
-	} else {
-		if (i + 1 != argc) {
-			fprintf(stderr, "Usage: %s [-o destpath] file.nbl\n", argv[0]);
-			return 1;
-		}
-
-		pstrBuffer = nbl_load(argv[i]);
-		if (pstrBuffer == NULL) {
-			fprintf(stderr, "Error opening file %s\n", argv[i]);
-			return -1;
-		}
-
-		if (NBL_READ_UINT(pstrBuffer, NBL_HEADER_KEY_SEED) == 0)
-			pCtx = NULL;
-		else {
-			pCtx = &ctx;
-			key[0] = *(unsigned char*)(pstrBuffer + NBL_HEADER_KEY_SEED + 3);
-			key[1] = *(unsigned char*)(pstrBuffer + NBL_HEADER_KEY_SEED + 2);
-			key[2] = *(unsigned char*)(pstrBuffer + NBL_HEADER_KEY_SEED + 1);
-			key[3] = *(unsigned char*)(pstrBuffer + NBL_HEADER_KEY_SEED);
-			bf_setkey(pCtx, key, 4);
-		}
-
-		if (uOptions & OPTION_LIST)
-			list(uOptions, pstrBuffer, pCtx);
-		else
-			ret = extract(uOptions, pstrBuffer, pCtx, pstrDestPath);
+	if (i + 1 != argc) {
+		fprintf(stderr, "Usage: %s [-d] [-v] [-t] [-o destpath] file.nbl\n", argv[0]);
+		return 1;
 	}
+
+	pstrBuffer = nbl_load(argv[i]);
+	if (pstrBuffer == NULL) {
+		fprintf(stderr, "Error opening file %s\n", argv[i]);
+		return -1;
+	}
+
+	if (NBL_READ_UINT(pstrBuffer, NBL_HEADER_KEY_SEED) == 0)
+		pCtx = NULL;
+	else {
+		pCtx = &ctx;
+		key[0] = *(unsigned char*)(pstrBuffer + NBL_HEADER_KEY_SEED + 3);
+		key[1] = *(unsigned char*)(pstrBuffer + NBL_HEADER_KEY_SEED + 2);
+		key[2] = *(unsigned char*)(pstrBuffer + NBL_HEADER_KEY_SEED + 1);
+		key[3] = *(unsigned char*)(pstrBuffer + NBL_HEADER_KEY_SEED);
+		bf_setkey(pCtx, key, 4);
+	}
+
+	if (uOptions & OPTION_LIST)
+		list(uOptions, pstrBuffer, pCtx);
+	else
+		ret = extract(uOptions, pstrBuffer, pCtx, pstrDestPath);
 
 	if (pstrBuffer)
 		free(pstrBuffer);
