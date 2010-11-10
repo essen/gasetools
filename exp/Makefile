@@ -17,10 +17,10 @@
 #	along with gasetools.  If not, see <http://www.gnu.org/licenses/>.
 
 all: clean
-	cc -Wall -Wextra -pedantic -O3 -o exp main.c ../nbl/nbl.c
+	cc -Wall -Wextra -pedantic -O3 -o exp main.c ../nbl/nbl.c ../nbl/fakefish.c
 
 win: clean
-	i586-mingw32msvc-cc -o exp.exe -combine main.c ../nbl/nbl.c
+	i586-mingw32msvc-cc -o exp.exe -combine main.c ../nbl/nbl.c ../nbl/fakefish.c
 
 clean:
 	-rm exp exp.exe
