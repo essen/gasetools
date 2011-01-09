@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 		if (iRead <= 0)
 			break;
 
-		if (iTmp == NBL_ID_NMLL || iTmp == NBL_ID_NMLB || iTmp == NBL_ID_TMLL) {
+		if (iTmp == NBL_ID_NMLL || iTmp == NBL_ID_NMLB) {
 			aFiles[iTotal] = iCurrentPos;
 			iTotal++;
 		}
