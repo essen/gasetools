@@ -64,12 +64,12 @@ int nbl_get_data_pos(char* pstrBuffer)
 
 int nbl_get_tmll_pos(char* pstrBuffer)
 {
-	int iPos = 0;
+	int ret = 0;
 
-	while (NBL_READ_INT(pstrBuffer, iPos) != NBL_ID_TMLL)
-		iPos += NBL_CHUNK_PADDING_SIZE;
+	while (NBL_READ_INT(pstrBuffer, ret) != NBL_ID_TMLL)
+		ret += 16;
 
-	return iPos;
+	return ret;
 }
 
 /**
