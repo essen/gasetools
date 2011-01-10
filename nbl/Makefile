@@ -17,7 +17,9 @@
 #	along with gasetools.  If not, see <http://www.gnu.org/licenses/>.
 
 all: clean
-	cc -Wall -Wextra -pedantic -O3 -o nbl main.c nbl.c fakefish.c
+	cc -m64 -std=c99 -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-qual \
+		-Wstrict-prototypes -Wmissing-prototypes -Werror -Wstrict-overflow=5 \
+		-pedantic -O3 -D_GNU_SOURCE -o nbl main.c nbl.c fakefish.c
 
 win: clean
 	i586-mingw32msvc-cc -o nbl.exe -combine main.c nbl.c fakefish.c

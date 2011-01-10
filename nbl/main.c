@@ -25,6 +25,14 @@
 #include "nbl.h"
 
 /**
+ * Prototypes.
+ */
+
+void debug_save_buffer(char* pstrFilename, char* pstrBuffer, int iSize);
+int extract(unsigned int uOptions, char* pstrBuffer, struct bf_ctx* pCtx, char* pstrDestPath);
+void list(unsigned int uOptions, char* pstrBuffer, struct bf_ctx* pCtx);
+
+/**
  * Options masks.
  */
 
