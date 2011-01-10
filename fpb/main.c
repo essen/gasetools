@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 			iTotal++;
 		}
 
-		iCurrentPos += NBL_CHUNK_PADDING_SIZE;
+		iCurrentPos += 4;
 	}
 
 	fseek(pFile, 0, SEEK_END);
