@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 	FILE* pFile;
 	char* pstrCmp;
 	char* pstrExp;
-	char pstrFilename[32];
+	char pstrFilename[FILENAME_MAX];
 	int iCmpSize, iExpSize, iRead;
 
 	if (2 != argc) {
